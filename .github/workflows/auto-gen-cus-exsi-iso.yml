@@ -1,0 +1,22 @@
+name: Auto Generate EXSi ISO With Network
+on:
+  repository_dispatch:
+  workflow_dispatch:
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Shell Script
+        shell: bash
+        run: |
+          wget https://github.com/VFrontDe/ESXi-Customizer-PS/archive/refs/tags/2.8.1.tar.gz
+          tar zxf 2.8.1.tar.gz
+          cd ESXi-Customizer-PS-2.8.1
+          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+      - name: Get EXSi File
+        shell: pwsh
+        run: |
+          Install-Module -Name VMware.PowerCLI
+          cd $WORK_DIR
+          ls
