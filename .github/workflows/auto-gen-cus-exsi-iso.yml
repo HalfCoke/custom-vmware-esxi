@@ -2,21 +2,53 @@ name: Auto Generate EXSi ISO With Network
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag'
+        required: true
+        default: 'ESXi670-net55-r8168'
+#  push:
+#    branches:
+#      - main
 
 jobs:
   Build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
-      - name: Get Shell Script
-        shell: bash
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Download Big ZIP
+        shell: powershell
         run: |
-          wget https://github.com/VFrontDe/ESXi-Customizer-PS/archive/refs/tags/2.8.1.tar.gz
-          tar zxf 2.8.1.tar.gz
-          cd ESXi-Customizer-PS-2.8.1
-          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
-      - name: Get EXSi File
-        shell: pwsh
-        run: |
-          Install-Module -Name VMware.PowerCLI
-          cd $WORK_DIR
+          $client = new-object System.Net.WebClient
+          $client.DownloadFile('${{ secrets.DOWNLOAD_URL }}','ESXi670-201912001.zip')
           ls
+      - name: Download Script
+        shell: powershell
+        run: |
+          $client = new-object System.Net.WebClient
+          $client.DownloadFile('https://github.com/VFrontDe/ESXi-Customizer-PS/archive/refs/tags/2.8.1.zip','ESXi-Customizer-PS.zip')
+          Expand-Archive -Path ESXi-Customizer-PS.zip -DestinationPath ./
+          cd ESXi-Customizer-PS-2.8.1
+          $env:WORK_DIR=$PWD
+          $env:WORK_DIR
+          echo "WORK_DIR=$env:WORK_DIR" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Install PowerCLI
+        shell: powershell
+        run: Install-Module -Name VMware.PowerCLI -AcceptLicense -Force
+
+      - name: Get EXSi File
+        shell: powershell
+        run: |
+          cd $env:WORK_DIR\
+          .\ESXi-Customizer-PS.ps1 -izip ..\ESXi670-201912001.zip -vft -load net55-r8168 -outDir ..\
+          ls
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.TOKEN }}
+          name: Test Release
+          tag_name: ${{ github.event.inputs.tag }}
+          files: |
+            ESXi670-201912001.zip
