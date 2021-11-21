@@ -1,4 +1,4 @@
-name: Auto Generate EXSi ISO With Network
+name: Auto Generate EXSi ISO
 on:
   repository_dispatch:
   workflow_dispatch:
@@ -7,9 +7,6 @@ on:
         description: 'Release Tag'
         required: true
         default: 'ESXi670-net55-r8168'
-#  push:
-#    branches:
-#      - main
 
 jobs:
   Build:
@@ -42,13 +39,14 @@ jobs:
         shell: powershell
         run: |
           cd $env:WORK_DIR\
-          .\ESXi-Customizer-PS.ps1 -izip ..\ESXi670-201912001.zip -vft -load net55-r8168 -outDir ..\
+          .\ESXi-Customizer-PS.ps1 -izip ..\ESXi670-201912001.zip -vft -load net55-r8168 -outDir ..\${{ github.event.inputs.tag }}.iso
+          cd ..
           ls
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.TOKEN }}
-          name: Test Release
+          name: ${{ github.event.inputs.tag }}
           tag_name: ${{ github.event.inputs.tag }}
           files: |
-            ESXi670-201912001.zip
+            ${{ github.event.inputs.tag }}.iso
