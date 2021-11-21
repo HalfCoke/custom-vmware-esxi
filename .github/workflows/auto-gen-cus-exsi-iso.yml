@@ -39,7 +39,7 @@ jobs:
         shell: powershell
         run: |
           cd $env:WORK_DIR\
-          .\ESXi-Customizer-PS.ps1 -izip ..\ESXi670-201912001.zip -vft -load net55-r8168 -outDir ..\${{ github.event.inputs.tag }}.iso
+          .\ESXi-Customizer-PS.ps1 -izip ..\ESXi670-201912001.zip -vft -load net55-r8168 -outDir ..\
           cd ..
           ls
       - name: Create Release
@@ -49,4 +49,4 @@ jobs:
           name: ${{ github.event.inputs.tag }}
           tag_name: ${{ github.event.inputs.tag }}
           files: |
-            ${{ github.event.inputs.tag }}.iso
+            ESXi-6.7.0-20191204001-standard-customized.iso
